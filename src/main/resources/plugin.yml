@@ -1,0 +1,13 @@
+name: CubeGen
+main: ir.devwebs.cubegen.CubeGen
+version: 1.0
+api-version: 1.17
+author: m0hammad1
+description: you can get cube with this plugin!
+
+commands:
+  cubeGen:
+    usage: /cubeGen or /cg
+    description: you can custom your cube!
+    aliases:
+      - cg
