@@ -19,6 +19,7 @@
 
 | Command | Description |
 |---------|-------------|
+| `/cg` | All command and plugin info |
 | `/cg create [name]` | Create a new cube |
 | `/cg remove [name]` | Delete a saved cube |
 | `/cg setting [name]` | Open cube settings GUI |
