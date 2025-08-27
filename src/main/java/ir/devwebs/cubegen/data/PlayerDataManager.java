@@ -15,7 +15,7 @@ public class PlayerDataManager {
     }
 
     public File getPlayerFile(UUID uuid) {
-        File folder = new File(plugin.getDataFolder(), "PlayerData");
+        File folder = new File(plugin.getDataFolder(), "Player");
         if(!folder.exists()) folder.mkdirs();
         return new File(folder, uuid.toString() + ".yml");
     }

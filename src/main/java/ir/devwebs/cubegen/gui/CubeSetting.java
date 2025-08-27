@@ -10,6 +10,7 @@ import ir.devwebs.cubegen.data.PlayerDataManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -18,10 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.checkerframework.common.returnsreceiver.qual.This;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CubeSetting {
@@ -61,13 +59,20 @@ public class CubeSetting {
         ItemMeta sizeMeta = sizeStack.getItemMeta();
         if(sizeMeta != null){
             sizeMeta.setDisplayName(setChatColor("&bcube size: &f" + data.getString("cubes." + cubeName + ".setting.size")));
+            sizeMeta.setLore(Arrays.asList(
+                    setChatColor("&7Left click to add 2 size"),
+                    setChatColor("&7Right click to subtract 2 size")
+            ));
             sizeStack.setItemMeta(sizeMeta);
         }
         GuiItem sizeItem = new GuiItem(sizeStack, (e) -> {
             int size =  data.getInt("cubes." + cubeName + ".setting.size");
 
+            int min = plugin.getConfig().getInt("setting.size.minimum");
+            int max = plugin.getConfig().getInt("setting.size.maximum");
+
             if(e.isLeftClick()){
-                if(size < 26){
+                if(size < max){
                     data.set("cubes." + cubeName + ".setting.size", size + 2);
                     playerDataManager.savePlayerConfig(uuid, data);
                     new CubeSetting(player, cubeName);
@@ -76,7 +81,7 @@ public class CubeSetting {
             }
 
             if(e.isRightClick()){
-                if(size > 6){
+                if(size > min){
                     data.set("cubes." + cubeName + ".setting.size", size - 2);
                     playerDataManager.savePlayerConfig(uuid, data);
                     new CubeSetting(player, cubeName);
@@ -124,6 +129,9 @@ public class CubeSetting {
         });
         pane.addItem(blocksItem, 6, 1);
 
+        gui.setOnGlobalDrag(e -> e.setCancelled(true));
+        gui.setOnGlobalClick(e -> e.setCancelled(true));
+
         gui.addPane(pane);
         gui.show(player);
     }
@@ -136,10 +144,10 @@ public class CubeSetting {
         typeGui = new ChestGui(3, setChatColor("Cube &4Type"));
         StaticPane pane = new StaticPane(0, 0 ,9, 3);
 
-        ItemStack typeStackStone = new ItemStack(Material.STONE);
+        ItemStack typeStackStone = new ItemStack(Material.BARRIER);
         ItemMeta typeMetaStone = typeStackStone.getItemMeta();
         if(typeMetaStone != null){
-            typeMetaStone.setDisplayName(setChatColor("&c&lnormal"));
+            typeMetaStone.setDisplayName(setChatColor("&bNormal"));
             typeStackStone.setItemMeta(typeMetaStone);
         }
 
@@ -172,7 +180,7 @@ public class CubeSetting {
         ItemStack typeStackBedrock = new ItemStack(Material.BEDROCK);
         ItemMeta typeMetaBedrock = typeStackBedrock.getItemMeta();
         if(typeMetaBedrock != null){
-            typeMetaBedrock.setDisplayName(setChatColor("&c&lprotect"));
+            typeMetaBedrock.setDisplayName(setChatColor("&cProtect"));
             typeStackBedrock.setItemMeta(typeMetaBedrock);
         }
 
@@ -209,13 +217,24 @@ public class CubeSetting {
         PlayerDataManager playerDataManager = plugin.getPlayerDataManager();
         YamlConfiguration data = playerDataManager.getPlayerConfig(uuid);
 
-        ChestGui blocksGui = new ChestGui(6, setChatColor("Cube &4Blocks"));
+        FileConfiguration data2 = plugin.getConfig();
+
+        blocksGui = new ChestGui(6, setChatColor("Cube &4Blocks"));
         StaticPane pane = new StaticPane(0, 0, 9, 6);
 
-        List<Material> allBlocks = Arrays.stream(Material.values())
-                .filter(Material::isBlock)
-                .filter(mat -> mat.isSolid() && mat.isOccluding())
-                .collect(Collectors.toList());
+        ConfigurationSection section = data2.getConfigurationSection("setting.blocks");
+
+        List<Material> allBlocks = new ArrayList<>();
+
+        if (section != null) {
+            for(String block : section.getKeys(false)){
+                if(section.getBoolean(block)){
+                    allBlocks.add(Material.getMaterial(block));
+                }
+            }
+        }else{
+            player.sendMessage(setChatColorPlugin("&cblocks section is null!"));
+        }
 
         int pageSize = 36;
         int start = page * pageSize;
@@ -263,16 +282,16 @@ public class CubeSetting {
                 }
 
                 if (e.isShiftClick()) {
-                    if (e.isRightClick() && chance < 100) {
+                    if (e.isRightClick() && chance > 1) {
                         if(clickedMeta.hasEnchant(Enchantment.DURABILITY)) {
-                            chance++;
+                            chance--;
                         }else{
                             player.sendMessage(setChatColor("&c&lHey! &7first select your block."));
                         }
                     }
-                    if (e.isLeftClick() && chance > 1) {
+                    if (e.isLeftClick() && chance < 100) {
                         if(clickedMeta.hasEnchant(Enchantment.DURABILITY)) {
-                            chance--;
+                            chance++;
                         }else{
                             player.sendMessage(setChatColor("&c&lHey! &7first select your block."));
                         }
@@ -303,7 +322,7 @@ public class CubeSetting {
             pane.addItem(new GuiItem(glass, e -> e.setCancelled(true)), i % 9, i / 9);
         }
 
-        ItemStack infoItem = HeadLib.STONE_EXCLAMATION_MARK.toItemStack();
+        ItemStack infoItem = new ItemStack(Material.OBSIDIAN);
         ItemMeta infoMeta = infoItem.getItemMeta();
         infoMeta.setDisplayName(setChatColor("&6Information"));
         infoMeta.setLore(Arrays.asList(
@@ -314,9 +333,9 @@ public class CubeSetting {
         infoItem.setItemMeta(infoMeta);
         pane.addItem(new GuiItem(infoItem, e -> e.setCancelled(true)), 4, 5);
 
-        ItemStack leftArrow = HeadLib.STONE_ARROW_LEFT.toItemStack();
+        ItemStack leftArrow = new ItemStack(Material.PAPER);
         ItemMeta leftMeta = leftArrow.getItemMeta();
-        leftMeta.setDisplayName(setChatColor("&aPrevious Page"));
+        leftMeta.setDisplayName(setChatColor("&ePrevious Page"));
         leftArrow.setItemMeta(leftMeta);
         pane.addItem(new GuiItem(leftArrow, e -> {
             e.setCancelled(true);
@@ -325,9 +344,9 @@ public class CubeSetting {
             }
         }), 3, 5);
 
-        ItemStack rightArrow = HeadLib.STONE_ARROW_RIGHT.toItemStack();
+        ItemStack rightArrow = new ItemStack(Material.PAPER);
         ItemMeta rightMeta = rightArrow.getItemMeta();
-        rightMeta.setDisplayName(setChatColor("&aNext Page"));
+        rightMeta.setDisplayName(setChatColor("&eNext Page"));
         rightArrow.setItemMeta(rightMeta);
         pane.addItem(new GuiItem(rightArrow, e -> {
             e.setCancelled(true);
