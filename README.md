@@ -19,11 +19,13 @@
 
 | Command | Description |
 |---------|-------------|
+| `/cg` | All command and plugin info |
 | `/cg create [name]` | Create a new cube |
 | `/cg remove [name]` | Delete a saved cube |
 | `/cg setting [name]` | Open cube settings GUI |
 | `/cg list` | List all your cubes |
 | `/cg place [name] [x] [y] [z]` | Place cube in the world |
+| `/cg unplace [name] [count]` | unPlace cube in the world |
 
 ---
 
@@ -32,7 +34,7 @@
 1. Download the plugin `.jar`  
 2. Place it in your server's `plugins` folder  
 3. Start or restart your server  
-4. Player data is saved under `plugins/CubeGen/PlayerData/`
+4. Player data is saved under `plugins/CubeGen/player/`
 
 ---
 
