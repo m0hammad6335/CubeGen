@@ -48,6 +48,10 @@ public class CubeSetting {
         ItemMeta typeMeta = typeStack.getItemMeta();
         if(typeMeta != null){
             typeMeta.setDisplayName(setChatColor("&bcube type"));
+            typeMeta.setLore(Arrays.asList(
+                    setChatColor("&7you can change your cube type with normal or protect."),
+                    setChatColor("&ecoming soon for type player and admin.")
+            ));
             typeStack.setItemMeta(typeMeta);
         }
         GuiItem typeItem = new GuiItem(typeStack, (e) -> {
@@ -122,6 +126,10 @@ public class CubeSetting {
         ItemMeta blocksMeta = blocksStack.getItemMeta();
         if(blocksMeta != null){
             blocksMeta.setDisplayName(setChatColor("&bcube blocks"));
+            typeMeta.setLore(Arrays.asList(
+                    setChatColor("&7you can change your cube blocks"),
+                    setChatColor("&esort with A-Z.")
+            ));
             blocksStack.setItemMeta(blocksMeta);
         }
         GuiItem blocksItem = new GuiItem(blocksStack, (e) -> {

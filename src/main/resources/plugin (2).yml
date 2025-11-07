@@ -1,0 +1,54 @@
+name: CubeGen
+main: ir.devwebs.cubegen.CubeGen
+version: 1.0.1
+api-version: 1.17
+author: m0hammad1
+description: Allows players to generate and customize cubes in the game.
+
+commands:
+  cubeGen:
+    description: Open the cube customization menu.
+    usage: /cubeGen or /cg
+    aliases:
+      - cg
+
+permissions:
+  cubegen.use:
+    description: Allows using the /cg command
+    default: op
+
+  cubegen.create:
+    description: Allows creating a new cube (/cg create)
+    default: op
+
+  cubegen.remove:
+    description: Allows removing an existing cube (/cg remove)
+    default: op
+
+  cubegen.setting:
+    description: Allows configuring cube settings (/cg setting)
+    default: op
+
+  cubegen.list:
+    description: Allows listing all cubes (/cg list)
+    default: op
+
+  cubegen.place:
+    description: Allows placing a cube at coordinates (/cg place)
+    default: op
+
+  cubegen.unplace:
+    description: Allows unplacing a cube from the world (/cg unplace)
+    default: op
+
+  cubegen.*:
+    description: All CubeGen permissions
+    default: op
+    children:
+      cubegen.use: true
+      cubegen.create: true
+      cubegen.remove: true
+      cubegen.setting: true
+      cubegen.list: true
+      cubegen.place: true
+      cubegen.unplace: true

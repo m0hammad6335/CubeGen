@@ -21,7 +21,6 @@ public class CubeGenerator {
     public Integer cubeSize;
     public String cubeName;
     public List<Location> cubeBlocksLocations = new ArrayList<>();
-    public Integer placedCount;
 
     public String setChatColorPlugin(String str){
         return ChatColor.translateAlternateColorCodes('&',"&8[&f&lCube&b&lGen&8] " + str);
@@ -31,12 +30,11 @@ public class CubeGenerator {
         return ChatColor.translateAlternateColorCodes('&', str);
     }
 
-    public CubeGenerator(Location origin, Integer cubeSize, Player player, Plugin plugin, String cubeName, String type, Integer placedCount){
+    public CubeGenerator(Location origin, Integer cubeSize, Player player, Plugin plugin, String cubeName, String type){
         this.plugin = plugin;
         this.origin = origin;
         this.cubeSize = cubeSize;
         this.cubeName = cubeName;
-        this.placedCount = placedCount;
 
         if(type.equalsIgnoreCase("place")){
             place(player);
@@ -54,17 +52,17 @@ public class CubeGenerator {
 
         data.set("test", 1);
 
-        ConfigurationSection section1 = data.getConfigurationSection("cubes." + cubeName + ".placed." + placedCount + ".location1");
-        ConfigurationSection section2 = data.getConfigurationSection("cubes." + cubeName + ".placed." + placedCount + ".location2");
+        ConfigurationSection section1 = data.getConfigurationSection("cubes." + cubeName + ".placed" + ".location1");
+        ConfigurationSection section2 = data.getConfigurationSection("cubes." + cubeName + ".placed" + ".location2");
 
         boolean replay = false;
 
         if(section1 != null && !section1.getKeys(false).isEmpty()){
             for(String key : section1.getKeys(false)){
-                int x = data.getInt("cubes." + cubeName + ".placed." + placedCount + ".location1." + key + ".x");
-                int y = data.getInt("cubes." + cubeName + ".placed." + placedCount + ".location1." + key + ".y");
-                int z = data.getInt("cubes." + cubeName + ".placed." + placedCount + ".location1." + key + ".z");
-                String worldName = data.getString("cubes." + cubeName + ".placed." + placedCount + ".location1." + key + ".world");
+                int x = data.getInt("cubes." + cubeName + ".placed." + "location1." + key + ".x");
+                int y = data.getInt("cubes." + cubeName + ".placed." + "location1." + key + ".y");
+                int z = data.getInt("cubes." + cubeName + ".placed." + "location1." + key + ".z");
+                String worldName = data.getString("cubes." + cubeName + ".placed." + ".location1." + key + ".world");
 
                 World world = Bukkit.getWorld(worldName);
 
@@ -82,10 +80,10 @@ public class CubeGenerator {
 
         if(section2 != null && !section2.getKeys(false).isEmpty()){
             for(String key : section2.getKeys(false)){
-                int x = data.getInt("cubes." + cubeName + ".placed." + placedCount + ".location2." + key + ".x");
-                int y = data.getInt("cubes." + cubeName + ".placed." + placedCount + ".location2." + key + ".y");
-                int z = data.getInt("cubes." + cubeName + ".placed." + placedCount + ".location2." + key + ".z");
-                String worldName = data.getString("cubes." + cubeName + ".placed." + placedCount + ".location2." + key + ".world");
+                int x = data.getInt("cubes." + cubeName + ".placed." + "location2." + key + ".x");
+                int y = data.getInt("cubes." + cubeName + ".placed." + "location2." + key + ".y");
+                int z = data.getInt("cubes." + cubeName + ".placed." + "location2." + key + ".z");
+                String worldName = data.getString("cubes." + cubeName + ".placed." + "location2." + key + ".world");
 
                 World world = Bukkit.getWorld(worldName);
 
@@ -96,7 +94,8 @@ public class CubeGenerator {
             }
         }
 
-        data.set("cubes." + cubeName + ".placed." + placedCount, null);
+        data.set("cubes." + cubeName + ".placed", null);
+        data.set("cubes." + cubeName + ".placedResult", false);
         playerDataManager.savePlayerConfig(uuid, data);
     }
 
@@ -105,7 +104,7 @@ public class CubeGenerator {
         PlayerDataManager playerDataManager = plugin2.getPlayerDataManager();
         YamlConfiguration data = playerDataManager.getPlayerConfig(uuid);
 
-        data.set("cubes." + cubeName + ".placed.count", placedCount);
+        data.set("cubes." + cubeName + ".placedResult", false);
 
         cubeBlocksLocations.clear();
 
@@ -169,18 +168,25 @@ public class CubeGenerator {
                             cubeBlocksLocations.add(loc);
 
                             loc.getBlock().setType(chosen);
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".x", loc.getBlockX());
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".y", loc.getBlockY());
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".z", loc.getBlockZ());
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".world", loc.getWorld().getName());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".x", loc.getBlockX());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".y", loc.getBlockY());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".z", loc.getBlockZ());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".world", loc.getWorld().getName());
                             index++;
                         }
-                        player.sendMessage(setChatColorPlugin("&b success place " + placedCount + " cube " + cubeName + "."));
+                        data.set("cubes." + cubeName + ".placedResult", true);
+                        player.sendMessage(setChatColorPlugin("&b success place " + " cube " + cubeName + "."));
                     }else{
+                        data.set("cubes." + cubeName + ".placedResult", false);
+                        playerDataManager.savePlayerConfig(uuid, data);
                         player.sendMessage(setChatColorPlugin("&b you cant place cube in other blocks."));
+                        return;
                     }
                 }else{
+                    data.set("cubes." + cubeName + ".placedResult", false);
+                    playerDataManager.savePlayerConfig(uuid, data);
                     player.sendMessage(setChatColorPlugin("&b you do not set blocks for cube."));
+                    return;
                 }
             }
         }
@@ -244,19 +250,26 @@ public class CubeGenerator {
                             cubeBlocksLocations.add(loc);
 
                             loc.getBlock().setType(chosen);
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".x", loc.getBlockX());
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".y", loc.getBlockY());
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".z", loc.getBlockZ());
-                            data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location1." + String.valueOf(index) + ".world", loc.getWorld().getName());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".x", loc.getBlockX());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".y", loc.getBlockY());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".z", loc.getBlockZ());
+                            data.set("cubes." + cubeName + ".placed." + "location1." + String.valueOf(index) + ".world", loc.getWorld().getName());
                             index++;
                         }
-                        player.sendMessage(setChatColorPlugin("&b success place " + placedCount + " cube " + cubeName + "."));
+                        data.set("cubes." + cubeName + ".placedResult", true);
+                        player.sendMessage(setChatColorPlugin("&b success place " + " cube " + cubeName + "."));
                     }else{
                         checkError = true;
+                        data.set("cubes." + cubeName + ".placedResult", false);
+                        playerDataManager.savePlayerConfig(uuid, data);
                         player.sendMessage(setChatColorPlugin("&b you cant place cube in other blocks."));
+                        return;
                     }
                 }else{
+                    data.set("cubes." + cubeName + ".placedResult", false);
+                    playerDataManager.savePlayerConfig(uuid, data);
                     player.sendMessage(setChatColorPlugin("&b you do not set blocks for cube."));
+                    return;
                 }
 
                 int borderOffset = offset + 1;
@@ -277,10 +290,10 @@ public class CubeGenerator {
                                     if (loc.getBlock().getType().isAir()) {
                                         loc.getBlock().setType(Material.BEDROCK);
 
-                                        data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location2." + String.valueOf(borderIndex) + ".x", loc.getBlockX());
-                                        data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location2." + String.valueOf(borderIndex) + ".y", loc.getBlockY());
-                                        data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location2." + String.valueOf(borderIndex) + ".z", loc.getBlockZ());
-                                        data.set("cubes." + cubeName + ".placed." + String.valueOf(placedCount) + ".location2." + String.valueOf(borderIndex) + ".world", loc.getWorld().getName());
+                                        data.set("cubes." + cubeName + ".placed." + "location2." + String.valueOf(borderIndex) + ".x", loc.getBlockX());
+                                        data.set("cubes." + cubeName + ".placed." + "location2." + String.valueOf(borderIndex) + ".y", loc.getBlockY());
+                                        data.set("cubes." + cubeName + ".placed." + "location2." + String.valueOf(borderIndex) + ".z", loc.getBlockZ());
+                                        data.set("cubes." + cubeName + ".placed." + "location2." + String.valueOf(borderIndex) + ".world", loc.getWorld().getName());
                                         borderIndex++;
                                     }
                                 }

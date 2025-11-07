@@ -18,10 +18,19 @@ public class CubeGen extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         reloadConfig();
-
         saveConfig();
-
         getConfigMatch();
+
+        int size = getConfig().getInt("setting.size.default");
+        int sizeMin = getConfig().getInt("setting.size.minimum");
+        int sizeMax = getConfig().getInt("setting.size.maximum");
+
+        if(size < sizeMin || size > sizeMax || sizeMin < 3) {
+            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &4Invalid config values for cube size!"));
+            plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &4Fix config and restart server."));
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
 
         plugin = this;
         playerDataManager = new PlayerDataManager(this);

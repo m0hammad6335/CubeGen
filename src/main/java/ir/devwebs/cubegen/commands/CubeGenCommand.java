@@ -28,18 +28,18 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
 
     CubeGen plugin = CubeGen.getPlugin();
 
-    public String setChatColorPlugin(String str){
-        return ChatColor.translateAlternateColorCodes('&',"&8[&f&lCube&b&lGen&8] " + str);
+    public String setChatColorPlugin(String str) {
+        return ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] " + str);
     }
 
-    public String setChatColor(String str){
+    public String setChatColor(String str) {
         return ChatColor.translateAlternateColorCodes('&', str);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(!(sender instanceof Player)){
-            sender.sendMessage( setChatColorPlugin("&cOnly players can use this command!"));
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(setChatColorPlugin("&cOnly players can use this command!"));
             return true;
         }
 
@@ -49,6 +49,13 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
         YamlConfiguration data = playerDataManager.getPlayerConfig(uuid);
 
         FileConfiguration dataConfig = plugin.getConfig();
+
+        // cg permission
+
+        if (!player.hasPermission("cubegen.use")){
+            player.sendMessage(setChatColorPlugin("&cyou don't have permission to use this command!"));
+            return true;
+        }
 
         // cg
 
@@ -70,7 +77,7 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(setChatColor("&b/cg setting <name> &7- Configure cube settings"));
             player.sendMessage(setChatColor("&b/cg list &7- List all your cubes"));
             player.sendMessage(setChatColor("&b/cg place <name> <x> <y> <z> &7- Place a cube at coordinates"));
-            player.sendMessage(setChatColor("&b/cg unplace <name> <count> &7- Remove a placed cube"));
+            player.sendMessage(setChatColor("&b/cg unplace <name> &7- Remove a placed cube"));
             player.sendMessage(" ");
             player.sendMessage(setChatColor("&b&m-----------------------------------------------------"));
             player.spigot().sendMessage(finalMessage);
@@ -78,15 +85,22 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // cg create permission
+
+        if (!player.hasPermission("cubegen.create") && args[0].equals("create")) {
+            player.sendMessage(setChatColorPlugin("&cyou don't have permission to use this command!"));
+            return true;
+        }
+
         // cg create <name>
 
-        if(args.length != 2 && args[0].equals("create")){
+        if (args.length != 2 && args[0].equals("create")) {
             player.sendMessage(setChatColorPlugin("&cusage: &b/cg create [name]"));
             return true;
         }
 
-        if(args.length == 2 && args[0].equals("create") && !args[1].isEmpty()){
-            if(data.contains("cubes." + args[1])){
+        if (args.length == 2 && args[0].equals("create") && !args[1].isEmpty()) {
+            if (data.contains("cubes." + args[1])) {
                 player.sendMessage(setChatColorPlugin("&cThis name already exists!"));
                 return true;
             }
@@ -95,67 +109,60 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
 
             data.createSection("cubes." + args[1]);
 
-            if(section != null){
-                for(String s : section.getKeys(false)){
+            if (section != null) {
+                for (String s : section.getKeys(false)) {
                     if (Material.matchMaterial(s) != null) {
                         data.set("cubes." + args[1] + ".setting.blocks." + s, section.getInt(s, 0));
-                    }else{
+                    } else {
                         player.sendMessage(setChatColorPlugin("&cError to get default blocks!"));
                     }
                 }
-            }else{
+            } else {
                 player.sendMessage(setChatColorPlugin("&cError to get default blocks!"));
             }
 
             int size = dataConfig.getInt("setting.size.default");
-            int sizeMin = dataConfig.getInt("setting.size.default.minimum");
-            int sizeMax = dataConfig.getInt("setting.size.default.maximum");
-
-            if(sizeMin < 3){
-                plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &4error to get config!"));
-                plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &crequired minimum size +3!"));
-                Bukkit.getPluginManager().disablePlugin(plugin);
-            }
-
-            if(size < sizeMin){
-                plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &4error to get config!"));
-                plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &crequired default size +minimum!"));
-                Bukkit.getPluginManager().disablePlugin(plugin);
-            }
-
-            if(size > sizeMax){
-                plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &4error to get config!"));
-                plugin.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&f&lCube&b&lGen&8] &crequired default size -maximum!"));
-                Bukkit.getPluginManager().disablePlugin(plugin);
-            }
 
             data.set("cubes." + args[1] + ".setting.size", size);
-
             data.set("cubes." + args[1] + ".setting.type", "normal");
             data.set("cubes." + args[1] + ".placed.count", 0);
             playerDataManager.savePlayerConfig(uuid, data);
-            player.sendMessage(setChatColorPlugin("&aYou have been create &b" + args[1] + "&a cube!" ));
+            player.sendMessage(setChatColorPlugin("&aYou have been create &b" + args[1] + "&a cube!"));
 
+            return true;
+        }
+
+        // cg remove permission
+
+        if (!player.hasPermission("cubegen.remove") && args[0].equals("remove")) {
+            player.sendMessage(setChatColorPlugin("&cyou don't have permission to use this command!"));
             return true;
         }
 
         // cg remove <name>
 
-        if(args.length != 2 && args[0].equals("remove")){
+        if (args.length != 2 && args[0].equals("remove")) {
             player.sendMessage(setChatColorPlugin("&cusage: &b/cg remove [name]"));
             return true;
         }
 
-        if(args.length == 2 && args[0].equals("remove") && !args[1].isEmpty()){
-            if(!data.contains("cubes." + args[1])){
+        if (args.length == 2 && args[0].equals("remove") && !args[1].isEmpty()) {
+            if (!data.contains("cubes." + args[1])) {
                 player.sendMessage(setChatColorPlugin("&cYou dont have cube with this name!"));
                 return true;
             }
 
             data.set("cubes." + args[1], null);
             playerDataManager.savePlayerConfig(uuid, data);
-            player.sendMessage(setChatColorPlugin("&aYou have been remove &b" + args[1] + "&a cube!" ));
+            player.sendMessage(setChatColorPlugin("&aYou have been remove &b" + args[1] + "&a cube!"));
 
+            return true;
+        }
+
+        // cg setting permission
+
+        if (!player.hasPermission("cubegen.setting") && args[0].equals("setting")) {
+            player.sendMessage(setChatColorPlugin("&cyou don't have permission to use this command!"));
             return true;
         }
 
@@ -176,15 +183,22 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // cg list permission
+
+        if (!player.hasPermission("cubegen.list") && args[0].equals("list")) {
+            player.sendMessage(setChatColorPlugin("&cyou don't have permission to use this command!"));
+            return true;
+        }
+
         // cg list
 
-        if(args.length != 1 && args[0].equals("list")){
+        if (args.length != 1 && args[0].equals("list")) {
             player.sendMessage(setChatColorPlugin("&cusage: &b/cg list"));
             return true;
         }
 
-        if(args.length == 1 && args[0].equals("list")){
-            if(!data.contains("cubes")){
+        if (args.length == 1 && args[0].equals("list")) {
+            if (!data.contains("cubes")) {
                 player.sendMessage(setChatColorPlugin("&cYou dont have any cubes!"));
 
                 return true;
@@ -198,15 +212,15 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(setChatColor("&b&m-----------------------------------------------------"));
             player.sendMessage("");
 
-            for(int i = 0; i < totalCubes.size(); i++){
+            for (int i = 0; i < totalCubes.size(); i++) {
                 String cubeName = totalCubes.get(i);
                 Integer cubeCount = i + 1;
 
                 TextComponent setting = new TextComponent(setChatColor("&7[&8setting&7]"));
-                setting.setClickEvent(new  ClickEvent(ClickEvent.Action.RUN_COMMAND, "/cg setting " + cubeName));
+                setting.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/cg setting " + cubeName));
                 setting.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§fClick to configure " + cubeName)));
 
-                TextComponent mainText =  new TextComponent(setChatColor("&7[&f" + cubeCount + "&7]&b " + cubeName + " "));
+                TextComponent mainText = new TextComponent(setChatColor("&7[&f" + cubeCount + "&7]&b " + cubeName + " "));
                 mainText.addExtra(setting);
 
                 player.spigot().sendMessage(mainText);
@@ -216,7 +230,14 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(setChatColor("&b&m-----------------------------------------------------"));
             player.sendMessage(setChatColor("&7Total: &b" + totalCubes.size() + " &7cubes"));
             player.sendMessage(setChatColor("&b&m-----------------------------------------------------"));
-            
+
+            return true;
+        }
+
+        // cg place permission
+
+        if (!player.hasPermission("cubegen.place") && args[0].equals("place")) {
+            player.sendMessage(setChatColorPlugin("&cyou don't have permission to use this command!"));
             return true;
         }
 
@@ -227,7 +248,7 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if(args.length == 5 && args[0].equalsIgnoreCase("place")){
+        if (args.length == 5 && args[0].equalsIgnoreCase("place")) {
             String cubeName = args[1];
             if (!data.contains("cubes." + cubeName)) {
                 player.sendMessage(setChatColorPlugin("&cYou don't have a cube with this name!"));
@@ -244,33 +265,48 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
             int z = Integer.parseInt(args[4]);
 
             int cubeSize = data.getInt("cubes." + cubeName + ".setting.size");
-            int placedCount = data.getInt("cubes." + cubeName + ".placed.count");
+            boolean placedResult = data.getBoolean("cubes." + cubeName + ".placedResult");
 
-            placedCount++;
+            if (placedResult) {
+                player.sendMessage(setChatColorPlugin("&cYou have already placed this Cube!"));
+                return true;
+            }
 
             Location location = new Location(player.getWorld(), x, y, z);
-            new CubeGenerator(location, cubeSize, player, plugin, cubeName, "place", placedCount);
-        }
-
-        // cg unplace <name> <placed count>
-
-        if (args.length != 3 && args[0].equalsIgnoreCase("unplace")) {
-            player.sendMessage(setChatColorPlugin("&cUsage: &b/cg unplace [name] [count]"));
+            playerDataManager.savePlayerConfig(uuid, data);
+            new CubeGenerator(location, cubeSize, player, plugin, cubeName, "place");
             return true;
         }
 
-        if (args.length == 3 && args[0].equalsIgnoreCase("unplace")) {
+        // cg unplace permission
+
+        if (!player.hasPermission("cubegen.unplace") && args[0].equals("unplace")) {
+            player.sendMessage(setChatColorPlugin("&cyou don't have permission to use this command!"));
+            return true;
+        }
+
+        // cg unplace <name>
+
+        if (args.length != 2 && args[0].equalsIgnoreCase("unplace")) {
+            player.sendMessage(setChatColorPlugin("&cUsage: &b/cg unplace [name]"));
+            return true;
+        }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("unplace")) {
             if (!data.contains("cubes." + args[1])) {
                 player.sendMessage(setChatColorPlugin("&cYou don't have a cube with this name!"));
                 return true;
             }
 
-            if(!data.contains("cubes." + args[1] + ".placed." + args[2]) && !args[2].matches("[1-9]\\d*")){
-                player.sendMessage(setChatColorPlugin("&cYou don't have a cube with this place count!"));
+            boolean placedResult = data.getBoolean("cubes." + args[1] + ".placedResult");
+
+            if (!placedResult) {
+                player.sendMessage(setChatColorPlugin("&cThis Cube not placed!"));
                 return true;
             }
 
-            new CubeGenerator(null ,null,player,plugin,args[1], "unplace", Integer.parseInt(args[2]));
+            playerDataManager.savePlayerConfig(uuid, data);
+            new CubeGenerator(null, null, player, plugin, args[1], "unplace");
             return true;
         }
 
@@ -280,20 +316,34 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
 
+        if (!(sender instanceof Player)) {
+            return Collections.emptyList();
+        }
         Player player = (Player) sender;
+
         UUID uuid = player.getUniqueId();
         PlayerDataManager playerDataManager = plugin.getPlayerDataManager();
         YamlConfiguration data = playerDataManager.getPlayerConfig(uuid);
 
         // cg <arg>
 
-        if(args.length == 1){
-            return Arrays.asList("create", "remove", "setting",  "list", "place", "unplace");
+        if (args.length == 1) {
+            List<String> cmds = new ArrayList<>();
+
+            if (player.hasPermission("cubegen.create")) cmds.add("create");
+            if (player.hasPermission("cubegen.remove")) cmds.add("remove");
+            if (player.hasPermission("cubegen.setting")) cmds.add("setting");
+            if (player.hasPermission("cubegen.list")) cmds.add("list");
+            if (player.hasPermission("cubegen.place")) cmds.add("place");
+            if (player.hasPermission("cubegen.unplace")) cmds.add("unplace");
+
+            return cmds;
         }
 
         // cg remove <arg>
 
         if(args.length == 2 && args[0].equals("remove")){
+            if(!player.hasPermission("cubegen.remove")) return Collections.emptyList();
             ConfigurationSection AllSectionCube = data.getConfigurationSection("cubes");
 
             if(AllSectionCube != null){
@@ -304,6 +354,7 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
         // cg setting <arg>
 
         if(args.length == 2 && args[0].equals("setting")){
+            if(!player.hasPermission("cubegen.setting")) return Collections.emptyList();
             ConfigurationSection AllSectionCube = data.getConfigurationSection("cubes");
 
             if(AllSectionCube != null){
@@ -314,6 +365,7 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
         // cg place <arg>
 
         if(args.length == 2 && args[0].equals("place")){
+            if(!player.hasPermission("cubegen.place")) return Collections.emptyList();
             ConfigurationSection AllSectionCube = data.getConfigurationSection("cubes");
 
             if(AllSectionCube != null){
@@ -324,20 +376,11 @@ public class CubeGenCommand implements CommandExecutor, TabCompleter {
         // cg unplace <arg> <arg>
 
         if(args.length == 2 && args[0].equals("unplace")){
+            if(!player.hasPermission("cubegen.unplace")) return Collections.emptyList();
             ConfigurationSection AllSectionCube = data.getConfigurationSection("cubes");
 
             if(AllSectionCube != null){
                 return new ArrayList<>(AllSectionCube.getKeys(false));
-            }
-        }
-
-        if(args.length == 3 && args[0].equals("unplace")){
-            ConfigurationSection AllSectionCube = data.getConfigurationSection("cubes." +  args[1] + ".placed");
-            ArrayList<String> sectionCount = new ArrayList<>(AllSectionCube.getKeys(false));
-            sectionCount.remove("count");
-
-            if(AllSectionCube != null){
-                return sectionCount;
             }
         }
 
