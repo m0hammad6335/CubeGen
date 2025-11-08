@@ -15,3 +15,13 @@
 - All previous beta features are now stable and fully supported.
 
 ---
+
+# CubeGen v1.0.1
+
+**Release Date:** 2025-11-8
+
+## 🛠 Bug Fixes
+- Fixed error config.
+- Fixed place cube.
+
+---
